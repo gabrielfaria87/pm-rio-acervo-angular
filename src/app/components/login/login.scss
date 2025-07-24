@@ -1,0 +1,65 @@
+// Estilos para tela de login
+.login-container {
+  // Imagem de fundo (descomente e ajuste o caminho)
+  // background-image: url('assets/images/background-login.jpg');
+  // background-size: cover;
+  // background-position: center;
+  // background-repeat: no-repeat;
+
+  // Ou mantenha o gradiente atual
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+
+  // Overlay semi-transparente para melhor legibilidade
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // background: rgba(30, 58, 138, 0.7); // Descomente se usar imagem de fundo
+    pointer-events: none;
+  }
+}
+
+// Estilo do logo
+.login-logo {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+// Card de login
+.login-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+// Animações
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeIn 0.6s ease-out;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .login-logo {
+    max-width: 60px;
+    max-height: 60px;
+  }
+}

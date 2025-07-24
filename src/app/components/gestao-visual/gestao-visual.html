@@ -1,0 +1,194 @@
+<div class="min-h-screen bg-gray-50">
+  <app-navbar></app-navbar>
+
+  <div class="container mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-md">
+      <!-- Cabeçalho -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">Gestão Visual</h1>
+            <p class="text-gray-600 mt-2">Quadro colaborativo com post-its e ferramentas de desenho</p>
+          </div>
+
+          <div class="flex space-x-2">
+            <button *ngIf="authService.isAdmin()"
+                    (click)="limparQuadro()"
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+              🗑️ Limpar Quadro
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Ferramentas -->
+      <div class="p-4 bg-gray-100 border-b border-gray-200">
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Ferramentas -->
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium text-gray-700">Ferramentas:</span>
+
+            <button (click)="selecionarFerramenta('postit')"
+                    [class]="'px-3 py-2 rounded text-sm transition-colors ' +
+                           (ferramentaSelecionada === 'postit' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-200')">
+              📝 Post-it
+            </button>
+
+            <button (click)="selecionarFerramenta('linha')"
+                    [class]="'px-3 py-2 rounded text-sm transition-colors ' +
+                           (ferramentaSelecionada === 'linha' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-200')">
+              📏 Linha
+            </button>
+
+            <button (click)="selecionarFerramenta('retangulo')"
+                    [class]="'px-3 py-2 rounded text-sm transition-colors ' +
+                           (ferramentaSelecionada === 'retangulo' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-200')">
+              ⬛ Retângulo
+            </button>
+
+            <button (click)="selecionarFerramenta('circulo')"
+                    [class]="'px-3 py-2 rounded text-sm transition-colors ' +
+                           (ferramentaSelecionada === 'circulo' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-200')">
+              ⭕ Círculo
+            </button>
+          </div>
+
+          <!-- Configurações de Desenho -->
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <label class="text-sm font-medium text-gray-700">Cor:</label>
+              <input type="color"
+                     [(ngModel)]="corSelecionada"
+                     class="w-8 h-8 rounded border">
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <label class="text-sm font-medium text-gray-700">Espessura:</label>
+              <input type="range"
+                     [(ngModel)]="espessuraSelecionada"
+                     min="1" max="10"
+                     class="w-20">
+              <span class="text-sm text-gray-600">{{espessuraSelecionada}}px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área do Quadro -->
+      <div class="relative">
+        <!-- Canvas para desenho -->
+        <canvas #quadroCanvas
+                (mousedown)="onCanvasMouseDown($event)"
+                (mousemove)="onCanvasMouseMove($event)"
+                (mouseup)="onCanvasMouseUp($event)"
+                class="border border-gray-300 cursor-crosshair"
+                style="width: 100%; height: 600px;">
+        </canvas>
+
+        <!-- Post-its -->
+        <div *ngFor="let postIt of postIts"
+             class="absolute cursor-move shadow-md"
+             [style.left.px]="postIt.posicaoX"
+             [style.top.px]="postIt.posicaoY"
+             [style.width.px]="postIt.largura"
+             [style.height.px]="postIt.altura"
+             [style.background-color]="postIt.cor">
+
+          <div class="p-3 h-full flex flex-col">
+            <div class="flex-1 text-sm text-gray-800 overflow-hidden">
+              {{postIt.texto}}
+            </div>
+
+            <div class="flex justify-between items-center mt-2">
+              <div class="text-xs text-gray-600">
+                {{postIt.autor}} - {{postIt.datacriacao | date:'dd/MM'}}
+              </div>
+
+              <div class="flex space-x-1" *ngIf="authService.isAdmin()">
+                <button (click)="editarPostIt(postIt)"
+                        class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                  ✏️
+                </button>
+                <button (click)="excluirPostIt(postIt)"
+                        class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instruções -->
+      <div class="p-4 bg-gray-50 border-t border-gray-200">
+        <div class="text-sm text-gray-600">
+          <strong>Instruções:</strong>
+          <ul class="mt-2 space-y-1">
+            <li>• <strong>Post-it:</strong> Clique no quadro para adicionar um post-it</li>
+            <li>• <strong>Desenho:</strong> Selecione uma ferramenta e desenhe no quadro</li>
+            <li>• <strong>Edição:</strong> Administradores podem editar e excluir post-its</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Post-it -->
+<div *ngIf="isModalPostItOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        {{postItSelecionado ? 'Editar Post-it' : 'Novo Post-it'}}
+      </h3>
+
+      <form [formGroup]="postItForm" (ngSubmit)="salvarPostIt()">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Texto</label>
+            <textarea formControlName="texto"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows="3"
+                      placeholder="Digite o texto do post-it..."
+                      maxlength="200"></textarea>
+            <div *ngIf="postItForm.get('texto')?.invalid && postItForm.get('texto')?.touched"
+                 class="text-red-500 text-sm mt-1">
+              <div *ngIf="postItForm.get('texto')?.errors?.['required']">Texto é obrigatório</div>
+              <div *ngIf="postItForm.get('texto')?.errors?.['maxlength']">Máximo 200 caracteres</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Cor</label>
+            <div class="flex flex-wrap gap-2">
+              <button *ngFor="let cor of coresPostIt"
+                      type="button"
+                      (click)="postItForm.patchValue({cor: cor.valor})"
+                      [class]="'w-8 h-8 rounded border-2 ' +
+                             (postItForm.get('cor')?.value === cor.valor ? 'border-gray-800' : 'border-gray-300')"
+                      [style.background-color]="cor.valor"
+                      [title]="cor.nome">
+              </button>
+            </div>
+            <div class="mt-2 text-sm text-gray-600">
+              Cor selecionada: {{getCorNome(postItForm.get('cor')?.value)}}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button"
+                  (click)="closeModal()"
+                  class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button type="submit"
+                  [disabled]="postItForm.invalid"
+                  class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{postItSelecionado ? 'Salvar' : 'Criar'}}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

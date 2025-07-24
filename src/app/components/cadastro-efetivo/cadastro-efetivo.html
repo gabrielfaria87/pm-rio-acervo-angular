@@ -1,0 +1,185 @@
+<app-navbar></app-navbar>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">
+        Cadastro de Efetivo
+      </h2>
+
+      <!-- Mensagem de feedback -->
+      <div *ngIf="mensagem"
+           class="mb-6 p-4 rounded-md"
+           [class.bg-green-100]="tipoMensagem === 'success'"
+           [class.text-green-700]="tipoMensagem === 'success'"
+           [class.bg-red-100]="tipoMensagem === 'error'"
+           [class.text-red-700]="tipoMensagem === 'error'">
+        {{ mensagem }}
+      </div>
+
+      <form [formGroup]="cadastroForm" (ngSubmit)="onSubmit()">
+        <!-- Nome -->
+        <div class="mb-4">
+          <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">
+            Nome Completo *
+          </label>
+          <input
+            type="text"
+            id="nome"
+            formControlName="nome"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="hasFieldError('nome')"
+            placeholder="Digite o nome completo">
+          <div *ngIf="hasFieldError('nome')" class="text-red-500 text-sm mt-1">
+            {{ getFieldError('nome') }}
+          </div>
+        </div>
+
+        <!-- Graduação -->
+        <div class="mb-4">
+          <label for="graduacao" class="block text-sm font-medium text-gray-700 mb-2">
+            Graduação *
+          </label>
+          <select
+            id="graduacao"
+            formControlName="graduacao"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="hasFieldError('graduacao')">
+            <option value="">Selecione a graduação</option>
+            <option *ngFor="let graduacao of graduacoes" [value]="graduacao">
+              {{ graduacao }}
+            </option>
+          </select>
+          <div *ngIf="hasFieldError('graduacao')" class="text-red-500 text-sm mt-1">
+            {{ getFieldError('graduacao') }}
+          </div>
+        </div>
+
+        <!-- Seção -->
+        <div class="mb-4">
+          <label for="secao" class="block text-sm font-medium text-gray-700 mb-2">
+            Seção *
+          </label>
+          <select
+            id="secao"
+            formControlName="secao"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="hasFieldError('secao')">
+            <option value="">Selecione a seção</option>
+            <option *ngFor="let secao of secoes" [value]="secao">
+              {{ secao }}
+            </option>
+          </select>
+          <div *ngIf="hasFieldError('secao')" class="text-red-500 text-sm mt-1">
+            {{ getFieldError('secao') }}
+          </div>
+        </div>
+
+        <!-- Função -->
+        <div class="mb-4">
+          <label for="funcao" class="block text-sm font-medium text-gray-700 mb-2">
+            Função *
+          </label>
+          <select
+            id="funcao"
+            formControlName="funcao"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="hasFieldError('funcao')">
+            <option value="">Selecione a função</option>
+            <option *ngFor="let funcao of funcoes" [value]="funcao">
+              {{ funcao }}
+            </option>
+          </select>
+          <div *ngIf="hasFieldError('funcao')" class="text-red-500 text-sm mt-1">
+            {{ getFieldError('funcao') }}
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-4">
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="hasFieldError('email')"
+            placeholder="exemplo@pmerj.rj.gov.br">
+          <div *ngIf="hasFieldError('email')" class="text-red-500 text-sm mt-1">
+            {{ getFieldError('email') }}
+          </div>
+        </div>
+
+        <!-- Telefone -->
+        <div class="mb-4">
+          <label for="telefone" class="block text-sm font-medium text-gray-700 mb-2">
+            Telefone
+          </label>
+          <input
+            type="tel"
+            id="telefone"
+            formControlName="telefone"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="(21) 99999-9999">
+        </div>
+
+        <!-- URL da Foto -->
+        <div class="mb-4">
+          <label for="foto" class="block text-sm font-medium text-gray-700 mb-2">
+            URL da Foto
+          </label>
+          <input
+            type="url"
+            id="foto"
+            formControlName="foto"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://exemplo.com/foto.jpg">
+        </div>
+
+        <!-- Data de Ingresso -->
+        <div class="mb-4">
+          <label for="dataIngresso" class="block text-sm font-medium text-gray-700 mb-2">
+            Data de Ingresso
+          </label>
+          <input
+            type="date"
+            id="dataIngresso"
+            formControlName="dataIngresso"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Status Ativo -->
+        <div class="mb-6">
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              formControlName="ativo"
+              class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <span class="text-sm font-medium text-gray-700">Policial Ativo</span>
+          </label>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex gap-4">
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span *ngIf="!isLoading">Cadastrar</span>
+            <span *ngIf="isLoading">Cadastrando...</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="cancelar()"
+            [disabled]="isLoading"
+            class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

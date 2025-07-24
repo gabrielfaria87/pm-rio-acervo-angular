@@ -1,0 +1,345 @@
+<app-navbar></app-navbar>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-blue-800">Acervo Digital</h1>
+
+    <button *ngIf="authService.isAdmin()"
+            (click)="novoDocumento()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+      + Novo Documento
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Busca -->
+      <div>
+        <label for="busca" class="block text-sm font-medium text-gray-700 mb-2">
+          Buscar documentos
+        </label>
+        <input
+          type="text"
+          id="busca"
+          placeholder="Digite para buscar..."
+          (input)="buscar($event)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <!-- Filtro por categoria -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Categoria
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let categoria of categorias"
+                  (click)="filtrarPorCategoria(categoria)"
+                  [class.bg-blue-600]="categoriaSelecionada === categoria"
+                  [class.text-white]="categoriaSelecionada === categoria"
+                  [class.bg-gray-200]="categoriaSelecionada !== categoria"
+                  [class.text-gray-700]="categoriaSelecionada !== categoria"
+                  class="px-3 py-1 rounded-full text-sm hover:bg-blue-500 hover:text-white transition-colors">
+            {{ categoria }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="mb-4">
+    <p class="text-gray-600">
+      Mostrando {{ documentosFiltrados.length }} de {{ documentos.length }} documentos
+      <span *ngIf="categoriaSelecionada !== 'Todos'"> na categoria "{{ categoriaSelecionada }}"</span>
+      <span *ngIf="termoBusca"> para "{{ termoBusca }}"</span>
+    </p>
+  </div>
+
+  <!-- Grid de documentos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <div *ngFor="let documento of documentosFiltrados"
+         class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+
+      <!-- Header do card -->
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex items-start justify-between">
+
+          <div class="flex items-center space-x-3">
+            <div class="text-2xl">{{ getFormatoIcon(documento.formato) }}</div>
+            <div>
+              <h3 class="font-semibold text-gray-900 text-sm leading-5">{{ documento.titulo }}</h3>
+              <p class="text-xs text-gray-500 mt-1">{{ documento.autor }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="authService.isAdmin()" class="flex space-x-1">
+            <button (click)="editarDocumento(documento)"
+                    class="text-blue-600 hover:text-blue-800 text-sm">
+              ✏️
+            </button>
+            <button (click)="excluirDocumento(documento)"
+                    class="text-red-600 hover:text-red-800 text-sm">
+              🗑️
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Conteúdo do card -->
+      <div class="p-4">
+        <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ documento.descricao }}</p>
+
+        <!-- Metadados -->
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs px-2 py-1 rounded-full"
+                [class]="getFormatoClass(documento.formato)">
+            {{ documento.formato }}
+          </span>
+          <span class="text-xs text-gray-500">{{ documento.tamanho }}</span>
+        </div>
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1 mb-3">
+          <span *ngFor="let tag of documento.tags"
+                class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+            #{{ tag }}
+          </span>
+        </div>
+
+        <!-- Data e ações -->
+        <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+          <span class="text-xs text-gray-500">
+            {{ documento.dataUpload | date:'dd/MM/yyyy' }}
+          </span>
+
+          <div class="flex space-x-2">
+            <button (click)="visualizarDocumento(documento)"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              Visualizar
+            </button>
+            <button *ngIf="documento.url"
+                    (click)="baixarDocumento(documento)"
+                    class="text-green-600 hover:text-green-800 text-sm font-medium">
+              Baixar
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Mensagem quando não há documentos -->
+  <div *ngIf="documentosFiltrados.length === 0"
+       class="text-center py-12">
+    <div class="text-6xl mb-4">📁</div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum documento encontrado</h3>
+    <p class="text-gray-500">
+      <span *ngIf="termoBusca">Tente buscar com outros termos ou </span>
+      <span *ngIf="categoriaSelecionada !== 'Todos'">Selecione uma categoria diferente ou </span>
+      limpe os filtros para ver todos os documentos.
+    </p>
+  </div>
+
+</div>
+
+<!-- Modal para visualizar/editar documento -->
+<div *ngIf="isModalOpen"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+     (click)="closeModal()">
+
+  <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-90vh overflow-y-auto"
+       (click)="$event.stopPropagation()">
+
+    <!-- Modo Visualização -->
+    <div *ngIf="isViewMode && documentoSelecionado">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-xl font-semibold text-gray-900">{{ documentoSelecionado.titulo }}</h3>
+        <button (click)="closeModal()"
+                class="text-gray-400 hover:text-gray-600 text-xl">
+          ×
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Descrição</label>
+          <p class="mt-1 text-gray-900">{{ documentoSelecionado.descricao || 'Sem descrição' }}</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Categoria</label>
+            <p class="mt-1 text-gray-900">{{ documentoSelecionado.categoria }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Autor</label>
+            <p class="mt-1 text-gray-900">{{ documentoSelecionado.autor }}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Formato</label>
+            <p class="mt-1 text-gray-900">{{ documentoSelecionado.formato }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Tamanho</label>
+            <p class="mt-1 text-gray-900">{{ documentoSelecionado.tamanho }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Data Upload</label>
+            <p class="mt-1 text-gray-900">{{ documentoSelecionado.dataUpload | date:'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="documentoSelecionado.tags.length > 0">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+          <div class="flex flex-wrap gap-2">
+            <span *ngFor="let tag of documentoSelecionado.tags"
+                  class="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
+              #{{ tag }}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex space-x-3 pt-4">
+          <button *ngIf="documentoSelecionado.url"
+                  (click)="baixarDocumento(documentoSelecionado)"
+                  class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+            Baixar Documento
+          </button>
+          <button *ngIf="authService.isAdmin()"
+                  (click)="editarDocumento(documentoSelecionado)"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+            Editar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modo Edição/Criação -->
+    <div *ngIf="!isViewMode">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-semibold text-gray-900">
+          {{ documentoSelecionado ? 'Editar Documento' : 'Novo Documento' }}
+        </h3>
+        <button (click)="closeModal()"
+                class="text-gray-400 hover:text-gray-600 text-xl">
+          ×
+        </button>
+      </div>
+
+      <form [formGroup]="documentoForm" (ngSubmit)="salvarDocumento()">
+
+        <!-- Título -->
+        <div class="mb-4">
+          <label for="titulo" class="block text-sm font-medium text-gray-700 mb-2">
+            Título *
+          </label>
+          <input
+            type="text"
+            id="titulo"
+            formControlName="titulo"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Digite o título do documento">
+        </div>
+
+        <!-- Descrição -->
+        <div class="mb-4">
+          <label for="descricao" class="block text-sm font-medium text-gray-700 mb-2">
+            Descrição
+          </label>
+          <textarea
+            id="descricao"
+            formControlName="descricao"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Descreva o documento (opcional)">
+          </textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <!-- Categoria -->
+          <div>
+            <label for="categoria" class="block text-sm font-medium text-gray-700 mb-2">
+              Categoria *
+            </label>
+            <select
+              id="categoria"
+              formControlName="categoria"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option *ngFor="let categoria of categorias.slice(1)" [value]="categoria">
+                {{ categoria }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Autor -->
+          <div>
+            <label for="autor" class="block text-sm font-medium text-gray-700 mb-2">
+              Autor
+            </label>
+            <input
+              type="text"
+              id="autor"
+              formControlName="autor"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nome do autor">
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="mb-4">
+          <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
+            Tags
+          </label>
+          <input
+            type="text"
+            id="tags"
+            formControlName="tags"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Separar por vírgulas (ex: história, documento, pmerj)">
+        </div>
+
+        <!-- URL -->
+        <div class="mb-6">
+          <label for="url" class="block text-sm font-medium text-gray-700 mb-2">
+            URL do Documento
+          </label>
+          <input
+            type="url"
+            id="url"
+            formControlName="url"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://exemplo.com/documento.pdf">
+        </div>
+
+        <!-- Botões -->
+        <div class="flex space-x-3">
+          <button
+            type="submit"
+            [disabled]="!documentoForm.valid"
+            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            {{ documentoSelecionado ? 'Salvar Alterações' : 'Criar Documento' }}
+          </button>
+
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+            Cancelar
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,164 @@
+<nav class="bg-blue-600 shadow-lg">
+  <div class="container mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+
+      <!-- Logo e Título -->
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <span class="ml-2 text-white text-xl font-bold">ARQUIVO GERAL - PMERJ</span>
+        </div>
+      </div>
+
+      <!-- Menu Desktop -->
+      <div class="hidden md:flex items-center space-x-6">
+        <a routerLink="/dashboard"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Dashboard
+        </a>
+
+        <a routerLink="/sobre"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Sobre
+        </a>
+
+        <a routerLink="/efetivo"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Efetivo
+        </a>
+
+        <a routerLink="/secoes"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Seções
+        </a>
+
+        <a routerLink="/acervo"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Acervo
+        </a>
+
+        <a routerLink="/informacoes"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Informações
+        </a>
+
+        <a *ngIf="isAdmin()"
+           routerLink="/gestao"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Gestão Visual
+        </a>
+
+        <a *ngIf="isAdmin()"
+           routerLink="/relatorios"
+           routerLinkActive="bg-blue-700"
+           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Relatórios
+        </a>
+      </div>
+
+      <!-- User Menu -->
+      <div class="hidden md:flex items-center space-x-4">
+        <div class="text-white text-sm">
+          Olá, <span class="font-medium">{{ currentUser?.nome }}</span>
+          <span *ngIf="isAdmin()" class="ml-2 bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
+        </div>
+
+        <button
+          (click)="logout()"
+          class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="md:hidden">
+        <button
+          (click)="toggleMenu()"
+          class="text-white hover:bg-blue-700 p-2 rounded-md">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path *ngIf="!isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <path *ngIf="isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div *ngIf="isMenuOpen" class="md:hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-blue-700">
+        <a routerLink="/dashboard"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Dashboard
+        </a>
+
+        <a routerLink="/sobre"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Sobre
+        </a>
+
+        <a routerLink="/efetivo"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Efetivo
+        </a>
+
+        <a routerLink="/secoes"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Seções
+        </a>
+
+        <a routerLink="/acervo"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Acervo
+        </a>
+
+        <a routerLink="/informacoes"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Informações
+        </a>
+
+        <a *ngIf="isAdmin()"
+           routerLink="/gestao"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Gestão Visual
+        </a>
+
+        <a *ngIf="isAdmin()"
+           routerLink="/relatorios"
+           (click)="toggleMenu()"
+           class="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium">
+          Relatórios
+        </a>
+
+        <div class="border-t border-blue-600 pt-4">
+          <div class="px-3 py-2 text-white text-sm">
+            {{ currentUser?.nome }}
+            <span *ngIf="isAdmin()" class="ml-2 bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
+          </div>
+          <button
+            (click)="logout()"
+            class="text-white hover:bg-blue-800 block w-full text-left px-3 py-2 rounded-md text-base font-medium">
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

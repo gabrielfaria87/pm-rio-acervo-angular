@@ -1,0 +1,344 @@
+<div class="min-h-screen bg-gray-50">
+  <app-navbar></app-navbar>
+
+  <div class="container mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-md">
+      <!-- Cabeçalho -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">Informações Relevantes</h1>
+            <p class="text-gray-600 mt-2">Central de comunicados e informações importantes</p>
+          </div>
+
+          <button *ngIf="authService.isAdmin()"
+                  (click)="novaInformacao()"
+                  class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+            ➕ Nova Informação
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="p-6 bg-gray-50 border-b border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Busca -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+            <input type="text"
+                   [value]="termoBusca"
+                   (input)="buscar($any($event.target).value)"
+                   placeholder="Buscar por título, conteúdo ou tags..."
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Filtro por Categoria -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+            <select [value]="categoriaFiltro"
+                    (change)="filtrarPorCategoria($any($event.target).value)"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="todas">Todas</option>
+              <option *ngFor="let categoria of categorias" [value]="categoria.valor">
+                {{categoria.icone}} {{categoria.nome}}
+              </option>
+            </select>
+          </div>
+
+          <!-- Filtro por Prioridade -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Prioridade</label>
+            <select [value]="prioridadeFiltro"
+                    (change)="filtrarPorPrioridade($any($event.target).value)"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="todas">Todas</option>
+              <option *ngFor="let prioridade of prioridades" [value]="prioridade.valor">
+                {{prioridade.nome}}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Informações -->
+      <div class="p-6">
+        <div *ngIf="informacoesFiltradas.length === 0" class="text-center py-8">
+          <div class="text-gray-400 text-6xl mb-4">📋</div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhuma informação encontrada</h3>
+          <p class="text-gray-600">Tente ajustar os filtros ou crie uma nova informação.</p>
+        </div>
+
+        <div *ngIf="informacoesFiltradas.length > 0" class="space-y-4">
+          <div *ngFor="let informacao of informacoesFiltradas"
+               class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+
+            <!-- Cabeçalho da Informação -->
+            <div class="p-4 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3 mb-2">
+                    <!-- Categoria -->
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          [style.background-color]="getCategoriaInfo(informacao.categoria).cor"
+                          [style.color]="informacao.categoria === 'importante' || informacao.categoria === 'administrativo' ? '#000' : '#fff'">
+                      {{getCategoriaInfo(informacao.categoria).icone}} {{getCategoriaInfo(informacao.categoria).nome}}
+                    </span>
+
+                    <!-- Prioridade -->
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                          [style.background-color]="getPrioridadeInfo(informacao.prioridade).cor">
+                      {{getPrioridadeInfo(informacao.prioridade).nome}}
+                    </span>
+
+                    <!-- Status de Expiração -->
+                    <span *ngIf="isExpirada(informacao)"
+                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      ⚠️ Expirada
+                    </span>
+
+                    <span *ngIf="!isExpirada(informacao) && getDiasRestantes(informacao) >= 0 && getDiasRestantes(informacao) <= 3"
+                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      ⏰ {{getDiasRestantes(informacao)}} dias restantes
+                    </span>
+                  </div>
+
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">{{informacao.titulo}}</h3>
+
+                  <div class="flex items-center text-sm text-gray-600 space-x-4">
+                    <span>👤 {{informacao.autor}}</span>
+                    <span>📅 {{informacao.dataPublicacao | date:'dd/MM/yyyy HH:mm'}}</span>
+                    <span>👁️ {{informacao.visualizacoes}} visualizações</span>
+                  </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="flex space-x-2" *ngIf="authService.isAdmin()">
+                  <button (click)="editarInformacao(informacao)"
+                          class="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                    ✏️
+                  </button>
+                  <button (click)="toggleStatus(informacao)"
+                          [class]="'p-2 rounded ' + (informacao.ativo ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50')">
+                    {{informacao.ativo ? '⏸️' : '▶️'}}
+                  </button>
+                  <button (click)="excluirInformacao(informacao)"
+                          class="p-2 text-red-600 hover:bg-red-50 rounded">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="p-4">
+              <p class="text-gray-700 leading-relaxed mb-3">
+                {{informacao.conteudo.length > 200 ? (informacao.conteudo | slice:0:200) + '...' : informacao.conteudo}}
+              </p>
+
+              <!-- Tags -->
+              <div *ngIf="informacao.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
+                <span *ngFor="let tag of informacao.tags"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                  #{{tag}}
+                </span>
+              </div>
+
+              <!-- Anexos -->
+              <div *ngIf="informacao.anexos.length > 0" class="mb-3">
+                <div class="text-sm font-medium text-gray-700 mb-2">Anexos:</div>
+                <div class="flex flex-wrap gap-2">
+                  <span *ngFor="let anexo of informacao.anexos"
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                    📎 {{anexo}}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Botão Visualizar -->
+              <div class="flex justify-end">
+                <button (click)="visualizarInformacao(informacao)"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                  👁️ Ver Completo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Visualização/Edição -->
+<div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl m-4 max-h-screen overflow-y-auto">
+    <div class="p-6">
+      <!-- Visualização -->
+      <div *ngIf="informacaoSelecionada && !authService.isAdmin()">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    [style.background-color]="getCategoriaInfo(informacaoSelecionada.categoria).cor"
+                    [style.color]="informacaoSelecionada.categoria === 'importante' || informacaoSelecionada.categoria === 'administrativo' ? '#000' : '#fff'">
+                {{getCategoriaInfo(informacaoSelecionada.categoria).icone}} {{getCategoriaInfo(informacaoSelecionada.categoria).nome}}
+              </span>
+
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                    [style.background-color]="getPrioridadeInfo(informacaoSelecionada.prioridade).cor">
+                {{getPrioridadeInfo(informacaoSelecionada.prioridade).nome}}
+              </span>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">{{informacaoSelecionada.titulo}}</h2>
+
+            <div class="flex items-center text-sm text-gray-600 space-x-4 mb-6">
+              <span>👤 {{informacaoSelecionada.autor}}</span>
+              <span>📅 {{informacaoSelecionada.dataPublicacao | date:'dd/MM/yyyy HH:mm'}}</span>
+              <span *ngIf="informacaoSelecionada.dataExpiracao">
+                ⏰ Expira em: {{informacaoSelecionada.dataExpiracao | date:'dd/MM/yyyy'}}
+              </span>
+              <span>👁️ {{informacaoSelecionada.visualizacoes}} visualizações</span>
+            </div>
+          </div>
+
+          <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+            ❌
+          </button>
+        </div>
+
+        <div class="prose max-w-none mb-6">
+          <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{informacaoSelecionada.conteudo}}</p>
+        </div>
+
+        <div *ngIf="informacaoSelecionada.tags.length > 0" class="mb-4">
+          <div class="text-sm font-medium text-gray-700 mb-2">Tags:</div>
+          <div class="flex flex-wrap gap-2">
+            <span *ngFor="let tag of informacaoSelecionada.tags"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+              #{{tag}}
+            </span>
+          </div>
+        </div>
+
+        <div *ngIf="informacaoSelecionada.anexos.length > 0" class="mb-4">
+          <div class="text-sm font-medium text-gray-700 mb-2">Anexos:</div>
+          <div class="space-y-2">
+            <div *ngFor="let anexo of informacaoSelecionada.anexos"
+                 class="flex items-center p-3 bg-gray-50 rounded-lg">
+              <span class="mr-3">📎</span>
+              <span class="flex-1">{{anexo}}</span>
+              <button class="text-blue-600 hover:text-blue-800 text-sm">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário -->
+      <div *ngIf="!informacaoSelecionada || authService.isAdmin()">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">
+            {{informacaoSelecionada ? 'Editar Informação' : 'Nova Informação'}}
+          </h3>
+          <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+            ❌
+          </button>
+        </div>
+
+        <form [formGroup]="informacaoForm" (ngSubmit)="salvarInformacao()">
+          <div class="space-y-6">
+            <!-- Título -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <input type="text"
+                     formControlName="titulo"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="Digite o título da informação">
+              <div *ngIf="informacaoForm.get('titulo')?.invalid && informacaoForm.get('titulo')?.touched"
+                   class="text-red-500 text-sm mt-1">
+                Título é obrigatório
+              </div>
+            </div>
+
+            <!-- Categoria e Prioridade -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                <select formControlName="categoria"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option *ngFor="let categoria of categorias" [value]="categoria.valor">
+                    {{categoria.icone}} {{categoria.nome}}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Prioridade</label>
+                <select formControlName="prioridade"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option *ngFor="let prioridade of prioridades" [value]="prioridade.valor">
+                    {{prioridade.nome}}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Conteúdo</label>
+              <textarea formControlName="conteudo"
+                        rows="8"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Digite o conteúdo da informação..."></textarea>
+              <div *ngIf="informacaoForm.get('conteudo')?.invalid && informacaoForm.get('conteudo')?.touched"
+                   class="text-red-500 text-sm mt-1">
+                Conteúdo é obrigatório
+              </div>
+            </div>
+
+            <!-- Data de Expiração e Tags -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Data de Expiração (opcional)</label>
+                <input type="date"
+                       formControlName="dataExpiracao"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tags (separadas por vírgula)</label>
+                <input type="text"
+                       formControlName="tags"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="tag1, tag2, tag3">
+              </div>
+            </div>
+
+            <!-- Status Ativo -->
+            <div>
+              <label class="flex items-center">
+                <input type="checkbox"
+                       formControlName="ativo"
+                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                <span class="ml-2 text-sm text-gray-700">Informação ativa</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 mt-8">
+            <button type="button"
+                    (click)="closeModal()"
+                    class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button type="submit"
+                    [disabled]="informacaoForm.invalid"
+                    class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{informacaoSelecionada ? 'Salvar' : 'Criar'}}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
