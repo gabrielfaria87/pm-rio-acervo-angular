@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -11,10 +11,14 @@ import { AuthService } from '../../services/auth';
   styleUrl: './login.scss'
 })
 export class Login implements OnInit {
+  // Usando signals para estado reativo
+  logoLoaded = signal(false);
+  logoSrc = signal('assets/images/logo-pmerj.png');
+  isLoading = signal(false);
+  showPassword = signal(false);
+  errorMessage = signal('');
+
   loginForm: FormGroup;
-  isLoading = false;
-  showPassword = false;
-  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -35,16 +39,35 @@ export class Login implements OnInit {
       return;
     }
 
+    // Tentar carregar a logo
+    this.loadLogo();
+
     // Debug: Verificar se o formulário foi criado
     console.log('LoginForm criado:', this.loginForm);
     console.log('Controles do formulário:', this.loginForm.controls);
     console.log('Username control:', this.loginForm.get('username'));
   }
 
+  loadLogo(): void {
+    // Tentar carregar a logo
+    const img = new Image();
+    img.onload = () => this.logoLoaded.set(true);
+    img.onerror = () => this.logoLoaded.set(false);
+    img.src = this.logoSrc();
+  }
+
+  onLogoLoad(): void {
+    this.logoLoaded.set(true);
+  }
+
+  onLogoError(): void {
+    this.logoLoaded.set(false);
+  }
+
   async onSubmit(): Promise<void> {
     if (this.loginForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
+      this.isLoading.set(true);
+      this.errorMessage.set('');
 
       const { username, password } = this.loginForm.value;
 
@@ -54,18 +77,18 @@ export class Login implements OnInit {
         if (result.success) {
           this.router.navigate(['/dashboard']);
         } else {
-          this.errorMessage = result.message;
+          this.errorMessage.set(result.message);
         }
       } catch (error) {
-        this.errorMessage = 'Erro interno do servidor';
+        this.errorMessage.set('Erro interno do servidor');
       } finally {
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     }
   }
 
   togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.showPassword.set(!this.showPassword());
   }
 
   // Método para debug do input
